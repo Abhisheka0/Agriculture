@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Reading History{% endblock %}
+{% block content %}
+  <div class="card card-premium p-0">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle mb-0 table-sticky">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Time (UTC)</th>
+            <th scope="col">Temperature (°C)</th>
+            <th scope="col">Humidity (%)</th>
+            <th scope="col">Soil moisture</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in readings %}
+          <tr>
+            <td class="text-muted small">{{ r.created_at }}</td>
+            <td>{{ r.temperature_c }}</td>
+            <td>{{ r.humidity }}</td>
+            <td>{{ r.soil_moisture }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+
+

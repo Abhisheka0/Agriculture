@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}AgriSense AI Analysis{% endblock %}
+{% block content %}
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card card-premium p-3">
+        <h6 class="text-muted mb-3">AI Analysis & Recommendations</h6>
+        <form method="post" class="row g-2 align-items-center mb-3">
+          <div class="col-auto"><label for="hours" class="col-form-label text-muted">Time window (hours)</label></div>
+          <div class="col-auto"><input class="form-control form-control-sm" type="number" id="hours" name="hours" min="1" max="168" value="24"></div>
+          <div class="col-auto"><button class="btn btn-gradient btn-sm" type="submit"><i class="bi bi-graph-up-arrow me-1"></i>Analyze</button></div>
+        </form>
+        <div class="card card-premium p-3">
+          {% if result %}
+            <pre class="mb-0">{{ result }}</pre>
+          {% else %}
+            <p class="text-muted mb-0">Click Analyze to generate AI insights based on recent sensor data.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card card-premium p-3">
+        <h6 class="text-muted mb-3">Window Summary</h6>
+        <div class="row g-2">
+          <div class="col-6"><div class="card card-premium p-2"><div class="small text-muted">Avg Temp</div><div class="fs-5 fw-bold">{{ summary.avg_temperature_c if summary.avg_temperature_c is not none else '—' }} <span class="text-muted small">°C</span></div></div></div>
+          <div class="col-6"><div class="card card-premium p-2"><div class="small text-muted">Avg Humidity</div><div class="fs-5 fw-bold">{{ summary.avg_humidity if summary.avg_humidity is not none else '—' }} <span class="text-muted small">%</span></div></div></div>
+          <div class="col-6"><div class="card card-premium p-2"><div class="small text-muted">Avg Soil</div><div class="fs-5 fw-bold">{{ summary.avg_soil_pct if summary.avg_soil_pct is not none else '—' }} <span class="text-muted small">%</span></div></div></div>
+          <div class="col-6"><div class="card p-2"><div class="small text-secondary">Samples</div><div class="fs-5 fw-bold">{{ summary.count }}</div></div></div>
+          <div class="col-6"><div class="card p-2"><div class="small text-muted">Since</div><div class="fw-semibold">{{ summary.since_fmt if summary.since_fmt else '—' }}</div></div></div>
+          <div class="col-6"><div class="card p-2"><div class="small text-muted">Last</div><div class="fw-semibold">{{ summary.last_fmt if summary.last_fmt else '—' }}</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+

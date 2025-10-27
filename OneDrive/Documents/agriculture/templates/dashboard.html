@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}AgriSense AI Dashboard{% endblock %}
+{% block content %}
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <div class="card card-premium p-3 stat-card h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="stat-label">Temperature</div>
+            <div class="stat-value">
+              {{ (latest.temperature_c|round(2)) if latest and (latest.temperature_c is not none) else '—' }}
+              <span class="text-muted fs-6">°C</span>
+            </div>
+          </div>
+          <div class="icon icon-temp"><i class="bi bi-thermometer-half"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card card-premium p-3 stat-card h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="stat-label">Humidity</div>
+            <div class="stat-value">
+              {{ (latest.humidity|round(2)) if latest and (latest.humidity is not none) else '—' }}
+              <span class="text-muted fs-6">%</span>
+            </div>
+          </div>
+          <div class="icon icon-hum"><i class="bi bi-droplet-half"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card card-premium p-3 stat-card h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="stat-label">Soil Moisture</div>
+            <div class="stat-value">
+              {{ (latest_soil_pct | round(2)) if latest_soil_pct is not none else '—' }}
+              <span class="text-muted fs-6">%</span>
+            </div>
+          </div>
+          <div class="icon icon-soil"><i class="bi bi-flower3"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+      <div class="card card-premium chart-card h-100">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h6 class="mb-0 text-muted">Sensor Data History</h6>
+          <small class="small-muted">Live updates</small>
+        </div>
+        <div style="height:300px">
+          <canvas id="historyChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card card-premium h-100 p-3 d-flex flex-column justify-content-between">
+        <div>
+          <h6 class="text-muted">AI Analysis & Recommendations</h6>
+          <p class="small-muted mb-0">Use the AI analysis page to get insights based on recent data.</p>
+        </div>
+        <div>
+          <a class="btn btn-gradient w-100" href="/analysis"><i class="bi bi-stars me-2"></i>Get AI Recommendation</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function(){
+    function soilToPct(v){
+      if(v === null || v === undefined) return null;
+      const minv = 300, maxv = 700;
+      let pct = (v - minv) / (maxv - minv) * 100;
+      return Math.max(0, Math.min(100, pct));
+    }
+    const el = document.getElementById('historyChart');
+    let chart;
+    async function refresh(){
+      try{
+        const ctrl = new AbortController();
+        const t = setTimeout(()=>ctrl.abort(), 2500);
+        const res = await fetch('/api/readings?limit=120', {cache:'no-store', signal: ctrl.signal});
+        clearTimeout(t);
+        const json = await res.json();
+        const readings = json.readings || [];
+        const labels = readings.map(r=>{
+          const d = new Date(r.created_at);
+          const h = d.getHours()%12 || 12; const m = String(d.getMinutes()).padStart(2,'0'); const am = d.getHours()<12? 'AM':'PM';
+          return `${h}:${m} ${am}`;
+        }).reverse();
+        const temps = readings.map(r=> r.temperature_c).reverse();
+        const hums = readings.map(r=> r.humidity).reverse();
+        const soils = readings.map(r=> soilToPct(r.soil_moisture)).reverse();
+        if(!chart){
+          chart = window.createAgriLineChart(el, labels, temps, hums, soils);
+        } else {
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = temps;
+          chart.data.datasets[1].data = hums;
+          chart.data.datasets[2].data = soils;
+          chart.update('none');
+        }
+      }catch(e){ /* ignore */ }
+    }
+    refresh();
+    setInterval(refresh, 4000);
+  })();
+</script>
+{% endblock %}
+
+
